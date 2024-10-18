@@ -12,38 +12,43 @@ import java.util.Map;
 @Service
 public class PlagiarismService {
 
-    // Method to execute the Python script and fetch results
     public Map<String, Double> checkPlagiarism() {
         Map<String, Double> plagiarismResults = new HashMap<>();
         try {
-            // Specify the Python script's path inside the resources folder
+            // Specify the Python script's path
             File script = new File("src/main/resources/plagiarism.py");
 
-            // Create a ProcessBuilder instance to execute the Python script
+            // Run the Python script using ProcessBuilder
             ProcessBuilder pb = new ProcessBuilder("python", script.getAbsolutePath());
-
-            // Start the process and capture its output
             Process process = pb.start();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
 
+            // Capture the output
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
             StringBuilder output = new StringBuilder();
             String line;
 
-            // Read the Python script's output line by line
             while ((line = reader.readLine()) != null) {
                 output.append(line);
             }
 
-            // Parse the output as JSON
-            JSONObject json = new JSONObject(output.toString());
-            json.keys().forEachRemaining(key -> plagiarismResults.put(key, json.getDouble(key)));
-
-            // Wait for the process to finish execution
+            // Wait for the process to complete
             process.waitFor();
 
+            // Print raw output for debugging
+            System.out.println("Python Script Output: " + output);
+
+            // Parse output only if it starts with '{'
+            if (output.toString().trim().startsWith("{")) {
+                JSONObject json = new JSONObject(output.toString());
+                json.keys().forEachRemaining(key ->
+                        plagiarismResults.put(key, json.getDouble(key))
+                );
+            } else {
+                System.err.println("Invalid JSON Output: " + output);
+            }
         } catch (Exception e) {
-            e.printStackTrace();  // Handle exceptions (e.g., missing script, Python errors)
+            e.printStackTrace();
         }
-        return plagiarismResults;  // Return the plagiarism results as a map
+        return plagiarismResults;
     }
 }
