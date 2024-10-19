@@ -1,54 +1,40 @@
 package com.plagiarism_analysis.plagiarism_analysis.service;
 
-import org.json.JSONObject;
 import org.springframework.stereotype.Service;
-
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.InputStreamReader;
-import java.util.HashMap;
-import java.util.Map;
+import org.springframework.web.multipart.MultipartFile;
+import java.io.*;
+import java.nio.file.*;
 
 @Service
 public class PlagiarismService {
 
-    public Map<String, Double> checkPlagiarism() {
-        Map<String, Double> plagiarismResults = new HashMap<>();
-        try {
-            // Specify the Python script's path
-            File script = new File("src/main/resources/plagiarism.py");
+    private static final String UPLOAD_DIR = "src/main/resources/input_files/";
+    private static final String PYTHON_SCRIPT = "src/python/plagiarism.py";
 
-            // Run the Python script using ProcessBuilder
-            ProcessBuilder pb = new ProcessBuilder("python", script.getAbsolutePath());
+    public String runPythonScript(MultipartFile file) {
+        try {
+            // Save uploaded file to input directory
+            Path filepath = Paths.get(UPLOAD_DIR, file.getOriginalFilename());
+            Files.write(filepath, file.getBytes());
+
+            // Run Python script with ProcessBuilder
+            ProcessBuilder pb = new ProcessBuilder("python", PYTHON_SCRIPT);
+            pb.redirectErrorStream(true);
             Process process = pb.start();
 
-            // Capture the output
+            // Capture output from the Python script
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
             StringBuilder output = new StringBuilder();
             String line;
-
             while ((line = reader.readLine()) != null) {
-                output.append(line);
+                output.append(line).append("\n");
             }
-
-            // Wait for the process to complete
+            int i  = 10;
+            Integer i = new Integer(10);
             process.waitFor();
-
-            // Print raw output for debugging
-            System.out.println("Python Script Output: " + output);
-
-            // Parse output only if it starts with '{'
-            if (output.toString().trim().startsWith("{")) {
-                JSONObject json = new JSONObject(output.toString());
-                json.keys().forEachRemaining(key ->
-                        plagiarismResults.put(key, json.getDouble(key))
-                );
-            } else {
-                System.err.println("Invalid JSON Output: " + output);
-            }
+            return output.toString();
         } catch (Exception e) {
-            e.printStackTrace();
+            return "Error: " + e.getMessage();
         }
-        return plagiarismResults;
     }
 }

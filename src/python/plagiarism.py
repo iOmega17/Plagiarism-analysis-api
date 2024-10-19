@@ -4,7 +4,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 # Set the directory for input text files
-INPUT_DIR = "src/main/resources/Inputs"
+input_dir = "D:/Downloads/Projects/plagiarism-analysis/src/main/resources/Inputs"
 
 def load_files(input_dir):
     """Load all .txt files from the specified input directory."""
@@ -28,13 +28,14 @@ def check_plagiarism(files, vectors):
             sim_score = calculate_similarity(vectors[i], vectors[j])
             if sim_score > 0:  # Only include non-zero similarity
                 pair = sorted((os.path.splitext(files[i])[0], os.path.splitext(files[j])[0]))
-                results[f"{pair[0]} similar to {pair[1]}"] = sim_score
+                key = f"{pair[0]} similar to {pair[1]}"
+                results[key] = sim_score
     return json.dumps(results, indent=4)
 
 if __name__ == "__main__":
     try:
         # Load files and compute vectors
-        student_files, student_notes = load_files(INPUT_DIR)
+        student_files, student_notes = load_files(input_dir)
         vectors = vectorize(student_notes)
 
         # Check plagiarism and print the result

@@ -1,22 +1,58 @@
 package com.plagiarism_analysis.plagiarism_analysis.controller;
 
-import com.plagiarism_analysis.plagiarism_analysis.service.PlagiarismService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import java.io.*;
+import java.nio.file.*;
+import java.util.stream.Collectors;
 
-import java.util.*;
 @RestController
-@RequestMapping("/api/plagiarism")
+@RequestMapping("/plagiarism")
 public class PlagiarismController {
 
-    @Autowired
-    private PlagiarismService plagiarismService;
+    private static final String INPUT_DIR = "src/main/resources/Inputs";  // Directory for input files
+    private static final String PYTHON_SCRIPT_PATH = "python/plagiarism.py";  // Adjust the path
 
-    // Expose a GET endpoint to check for plagiarism
+    // Endpoint to upload a new file
+    @PostMapping("/upload")
+    public String uploadFile(@RequestParam("file") MultipartFile file) {
+        try {
+            // Ensure input directory exists
+            Files.createDirectories(Paths.get(INPUT_DIR));
+
+            // Save the uploaded file in the input directory
+            String filePath = INPUT_DIR + file.getOriginalFilename();
+            Files.write(Paths.get(filePath), file.getBytes());
+
+            return "File uploaded successfully: " + file.getOriginalFilename();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return "File upload failed: " + e.getMessage();
+        }
+    }
+
+    // Endpoint to trigger the plagiarism check and get the JSON result
     @GetMapping("/check")
-    public Map<String, Double> checkPlagiarism() {
-        return plagiarismService.checkPlagiarism();  // Return the plagiarism results
+    public String checkPlagiarism() {
+        ProcessBuilder processBuilder = new ProcessBuilder("python3", PYTHON_SCRIPT_PATH);
+
+        try {
+            Process process = processBuilder.start();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+
+            // Collect the JSON output from the Python script
+            String result = reader.lines().collect(Collectors.joining("\n"));
+
+            int exitCode = process.waitFor();
+            if (exitCode == 0) {
+                return result;  // Return the JSON result
+            } else {
+                return "Error: Python script exited with code " + exitCode;
+            }
+
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+            return "Exception occurred: " + e.getMessage();
+        }
     }
 }
