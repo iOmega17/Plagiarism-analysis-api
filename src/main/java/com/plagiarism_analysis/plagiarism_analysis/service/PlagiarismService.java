@@ -1,40 +1,44 @@
 package com.plagiarism_analysis.plagiarism_analysis.service;
-
+import com.oracle.wls.shaded.org.apache.xalan.xslt.Process;
+import com.oracle.wls.shaded.org.apache.xpath.operations.String;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import java.io.*;
-import java.nio.file.*;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.List;
 
 @Service
 public class PlagiarismService {
 
-    private static final String UPLOAD_DIR = "src/main/resources/input_files/";
-    private static final String PYTHON_SCRIPT = "src/python/plagiarism.py";
+    private static final String INPUT_DIR = "D:/Downloads/Projects/plagiarism-analysis/src/main/resources/Inputs";  // Directory to store files
 
-    public String runPythonScript(MultipartFile file) {
-        try {
-            // Save uploaded file to input directory
-            Path filepath = Paths.get(UPLOAD_DIR, file.getOriginalFilename());
-            Files.write(filepath, file.getBytes());
-
-            // Run Python script with ProcessBuilder
-            ProcessBuilder pb = new ProcessBuilder("python", PYTHON_SCRIPT);
-            pb.redirectErrorStream(true);
-            Process process = pb.start();
-
-            // Capture output from the Python script
-            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            StringBuilder output = new StringBuilder();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                output.append(line).append("\n");
-            }
-            int i  = 10;
-            Integer i = new Integer(10);
-            process.waitFor();
-            return output.toString();
-        } catch (Exception e) {
-            return "Error: " + e.getMessage();
+    // Save the uploaded file to the input directory
+    public void saveFile(MultipartFile file) throws IOException {
+        File dir = new File(INPUT_DIR);
+        if (!dir.exists()) {
+            dir.mkdirs();  // Create the directory if it doesn't exist
         }
+
+        File outputFile = new File(dir, file.getOriginalFilename());
+        try (FileOutputStream fos = new FileOutputStream(outputFile)) {
+            fos.write(file.getBytes());
+        }
+    }
+
+    // Run the plagiarism.py script and return the JSON response
+    public String runPlagiarismCheck() throws IOException, InterruptedException {
+        ProcessBuilder processBuilder = new ProcessBuilder("python", "plagiarism.py");
+        processBuilder.directory(new File(System.getProperty("user.dir")));  // Set working directory
+
+        Process process = processBuilder.start();
+        process.waitFor();  // Wait for the process to complete
+
+        // Read the JSON output from the script
+        List<String> lines = Files.readAllLines(Paths.get("output.json"));
+        return String.join("\n", lines);
     }
 }

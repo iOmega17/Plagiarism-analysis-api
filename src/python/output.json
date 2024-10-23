@@ -1,0 +1,77 @@
+[
+    {
+        "file1": "eight.txt",
+        "file2": "five.txt",
+        "similarity": 73.31
+    },
+    {
+        "file1": "eight.txt",
+        "file2": "four.txt",
+        "similarity": 50.33
+    },
+    {
+        "file1": "eight.txt",
+        "file2": "gg.txt",
+        "similarity": 0.0
+    },
+    {
+        "file1": "eight.txt",
+        "file2": "three.txt",
+        "similarity": 29.7
+    },
+    {
+        "file1": "eight.txt",
+        "file2": "two.txt",
+        "similarity": 29.7
+    },
+    {
+        "file1": "five.txt",
+        "file2": "four.txt",
+        "similarity": 45.63
+    },
+    {
+        "file1": "five.txt",
+        "file2": "gg.txt",
+        "similarity": 0.0
+    },
+    {
+        "file1": "five.txt",
+        "file2": "three.txt",
+        "similarity": 44.15
+    },
+    {
+        "file1": "five.txt",
+        "file2": "two.txt",
+        "similarity": 44.15
+    },
+    {
+        "file1": "four.txt",
+        "file2": "gg.txt",
+        "similarity": 0.0
+    },
+    {
+        "file1": "four.txt",
+        "file2": "three.txt",
+        "similarity": 34.07
+    },
+    {
+        "file1": "four.txt",
+        "file2": "two.txt",
+        "similarity": 34.07
+    },
+    {
+        "file1": "gg.txt",
+        "file2": "three.txt",
+        "similarity": 0.0
+    },
+    {
+        "file1": "gg.txt",
+        "file2": "two.txt",
+        "similarity": 0.0
+    },
+    {
+        "file1": "three.txt",
+        "file2": "two.txt",
+        "similarity": 100.0
+    }
+]

@@ -3,43 +3,47 @@ import json
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
-# Set the directory for input text files
-input_dir = "D:/Downloads/Projects/plagiarism-analysis/src/main/resources/Inputs"
+def read_files_from_directory(directory):
+    files_content = {}
+    for filename in os.listdir(directory):
+        if filename.endswith('.txt'):
+            with open(os.path.join(directory, filename), 'r', encoding='utf-8') as f:
+                files_content[filename] = f.read()
+    return files_content
 
-def load_files(input_dir):
-    """Load all .txt files from the specified input directory."""
-    files = [f for f in os.listdir(input_dir) if f.endswith('.txt')]
-    contents = [open(os.path.join(input_dir, f), encoding='utf-8').read() for f in files]
-    return files, contents
+def calculate_similarity(files_content):
+    # Extract filenames and their content
+    filenames = list(files_content.keys())
+    content_list = list(files_content.values())
 
-def vectorize(texts):
-    """Convert text documents to TF-IDF feature vectors."""
-    return TfidfVectorizer().fit_transform(texts).toarray()
+    # Vectorize the content using TF-IDF
+    vectorizer = TfidfVectorizer().fit_transform(content_list)
+    similarity_matrix = cosine_similarity(vectorizer)
 
-def calculate_similarity(vector1, vector2):
-    """Calculate cosine similarity between two vectors."""
-    return round(cosine_similarity([vector1, vector2])[0][1], 2)
+    # Create a similarity result structure
+    similarity_results = []
+    for i in range(len(filenames)):
+        for j in range(i + 1, len(filenames)):
+            result = {
+                'file1': filenames[i],
+                'file2': filenames[j],
+                'similarity': round(similarity_matrix[i][j] * 100, 2)  # Percentage format
+            }
+            similarity_results.append(result)
 
-def check_plagiarism(files, vectors):
-    """Generate plagiarism results as a JSON object."""
-    results = {}
-    for i in range(len(files)):
-        for j in range(i + 1, len(files)):
-            sim_score = calculate_similarity(vectors[i], vectors[j])
-            if sim_score > 0:  # Only include non-zero similarity
-                pair = sorted((os.path.splitext(files[i])[0], os.path.splitext(files[j])[0]))
-                key = f"{pair[0]} similar to {pair[1]}"
-                results[key] = sim_score
-    return json.dumps(results, indent=4)
+    return similarity_results
+
+def save_results_to_json(results, output_file='output.json'):
+    with open(output_file, 'w', encoding='utf-8') as f:
+        json.dump(results, f, indent=4)
 
 if __name__ == "__main__":
-    try:
-        # Load files and compute vectors
-        student_files, student_notes = load_files(input_dir)
-        vectors = vectorize(student_notes)
+    input_dir = 'D:/Downloads/Projects/plagiarism-analysis/src/main/resources/Inputs'  # Directory containing the uploaded files
+    files_content = read_files_from_directory(input_dir)
 
-        # Check plagiarism and print the result
-        plagiarism_report = check_plagiarism(student_files, vectors)
-        print(plagiarism_report)
-    except Exception as e:
-        print(f"Error: {e}")
+    if files_content:
+        similarity_results = calculate_similarity(files_content)
+        save_results_to_json(similarity_results)
+        print("Similarity check complete. Results saved to output.json.")
+    else:
+        print("No text files found in the input directory.")

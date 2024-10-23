@@ -1,58 +1,50 @@
 package com.plagiarism_analysis.plagiarism_analysis.controller;
-
+import com.oracle.wls.shaded.org.apache.xpath.operations.String;
+import com.plagiarism_analysis.plagiarism_analysis.service.PlagiarismService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import java.io.*;
-import java.nio.file.*;
-import java.util.stream.Collectors;
 
-@RestController
-@RequestMapping("/plagiarism")
+import java.io.IOException;
+
+@Controller
 public class PlagiarismController {
 
-    private static final String INPUT_DIR = "src/main/resources/Inputs";  // Directory for input files
-    private static final String PYTHON_SCRIPT_PATH = "python/plagiarism.py";  // Adjust the path
+    @Autowired
+    private PlagiarismService plagiarismService;
 
-    // Endpoint to upload a new file
+    // GET request for the upload page
+    @GetMapping("/upload")
+    public String showUploadPage() {
+        return "upload";
+    }
+
+    // POST request to upload a file and add it to the input directory
     @PostMapping("/upload")
-    public String uploadFile(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<String> uploadFile(@RequestParam("file") MultipartFile file) {
         try {
-            // Ensure input directory exists
-            Files.createDirectories(Paths.get(INPUT_DIR));
-
-            // Save the uploaded file in the input directory
-            String filePath = INPUT_DIR + file.getOriginalFilename();
-            Files.write(Paths.get(filePath), file.getBytes());
-
-            return "File uploaded successfully: " + file.getOriginalFilename();
+            plagiarismService.saveFile(file);
+            return ResponseEntity.status(HttpStatus.OK).body("File uploaded successfully!");
         } catch (IOException e) {
-            e.printStackTrace();
-            return "File upload failed: " + e.getMessage();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error uploading file: " + e.getMessage());
         }
     }
 
-    // Endpoint to trigger the plagiarism check and get the JSON result
+    // GET request to run the plagiarism check and display the results
     @GetMapping("/check")
-    public String checkPlagiarism() {
-        ProcessBuilder processBuilder = new ProcessBuilder("python3", PYTHON_SCRIPT_PATH);
-
+    public String checkPlagiarism(Model model) {
         try {
-            Process process = processBuilder.start();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-
-            // Collect the JSON output from the Python script
-            String result = reader.lines().collect(Collectors.joining("\n"));
-
-            int exitCode = process.waitFor();
-            if (exitCode == 0) {
-                return result;  // Return the JSON result
-            } else {
-                return "Error: Python script exited with code " + exitCode;
-            }
-
-        } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
-            return "Exception occurred: " + e.getMessage();
+            String jsonResponse = plagiarismService.runPlagiarismCheck();
+            model.addAttribute("result", jsonResponse);
+            return "check"; // JSP view to display the result
+        } catch (Exception e) {
+            model.addAttribute("error", "Error running plagiarism check: " + e.getMessage());
+            return "error"; // JSP view to show errors
         }
     }
 }
