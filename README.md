@@ -1,7 +1,3 @@
-Here’s a well-structured **GitHub README** for your plagiarism detection project.  
-
----
-
 # **Plagiarism Detection Web Application 🚀**
 
 This project is a web application built using **Spring Boot** and **Python libraries** to detect plagiarism between uploaded files. The solution integrates Java-based backend technologies with Python to perform plagiarism detection using text similarity techniques.

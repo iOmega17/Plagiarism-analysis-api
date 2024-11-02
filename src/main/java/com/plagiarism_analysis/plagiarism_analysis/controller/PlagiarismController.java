@@ -1,5 +1,4 @@
 package com.plagiarism_analysis.plagiarism_analysis.controller;
-import com.oracle.wls.shaded.org.apache.xpath.operations.String;
 import com.plagiarism_analysis.plagiarism_analysis.service.PlagiarismService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -8,8 +7,11 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import java.lang.*;
 
 import java.io.IOException;
+import java.sql.SQLOutput;
+import java.util.List;
 
 @Controller
 public class PlagiarismController {
@@ -19,29 +21,30 @@ public class PlagiarismController {
 
     // GET request for the upload page
     @GetMapping("/upload")
-    public String showUploadPage() {
+    public java.lang.String showUploadPage() {
         return "upload";
     }
 
     // POST request to upload a file and add it to the input directory
     @PostMapping("/upload")
-    public ResponseEntity<String> uploadFile(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity uploadFile(@RequestParam("file") MultipartFile file) {
         try {
             plagiarismService.saveFile(file);
-            return ResponseEntity.status(HttpStatus.OK).body("File uploaded successfully!");
+            return ResponseEntity.status(HttpStatus.OK).body("File uploaded successfully");
         } catch (IOException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error uploading file: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error uploading file: " + e.getMessage());
         }
     }
 
     // GET request to run the plagiarism check and display the results
     @GetMapping("/check")
-    public String checkPlagiarism(Model model) {
+    public java.lang.String checkPlagiarism(Model model) throws java.lang.Exception {
         try {
-            String jsonResponse = plagiarismService.runPlagiarismCheck();
-            model.addAttribute("result", jsonResponse);
-            return "check"; // JSP view to display the result
+            List<String> jsonResponse = plagiarismService.runPlagiarismCheck();
+            // Add the JSON response to the result.jsp view
+            System.out.println(jsonResponse);
+            model.addAttribute("jsonResponse", jsonResponse);
+            return "result"; // JSP view to show the results
         } catch (Exception e) {
             model.addAttribute("error", "Error running plagiarism check: " + e.getMessage());
             return "error"; // JSP view to show errors

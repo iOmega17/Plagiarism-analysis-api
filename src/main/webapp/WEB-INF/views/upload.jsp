@@ -8,12 +8,16 @@
 </head>
 <body>
     <h1>Upload File</h1>
-    <form method="post" action="/check" enctype="multipart/form-data">
+    <form method="post" action="/upload" enctype="multipart/form-data">
         <input type="file" name="file" />
         <button type="submit">Upload</button>
     </form>
     <c:if test="${not empty message}">
-        <p>${message}</p>
+        <p>${message}
+            <a href="/check">Check uploaded files</a>
+        </p>
+
     </c:if>
+
 </body>
 </html>

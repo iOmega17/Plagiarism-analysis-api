@@ -1,3 +1,4 @@
+
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <!DOCTYPE html>
 <html>
@@ -8,15 +9,11 @@
 </head>
 <body>
     <h1>Plagiarism Check Results</h1>
-    <c:if test="${not empty message}">
-        <p>${message}</p>
+    <!-- Display the jsonResponse of the plagiarism check -->
+    <c:if test="${not empty jsonResponse}">
+        <p>${jsonResponse}</p>
     </c:if>
-    <c:if test="${not empty results}">
-        <ul>
-            <c:forEach var="entry" items="${results}">
-                <li>${entry.key}: ${entry.value}</li>
-            </c:forEach>
-        </ul>
-    </c:if>
+    <!-- display json response of the plagiarism check as a table-->
+
 </body>
 </html>
